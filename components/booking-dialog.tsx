@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { ArrowRight, ArrowLeft, Check, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { sendVerificationEmail } from "@/app/actions/send-verification"
+import { createAppointment, getBookedSlots } from "@/app/actions/appointments"
 import { useToast } from "@/hooks/use-toast"
 
 interface BookingDialogProps {
@@ -41,6 +41,8 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
   const [selectedTime, setSelectedTime] = useState<string>()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [bookedSlots, setBookedSlots] = useState<string[]>([])
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false)
   const { toast } = useToast()
 
   const [formData, setFormData] = useState({
@@ -50,6 +52,29 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
     email: "",
     phone: "",
   })
+
+  useEffect(() => {
+    if (selectedDate) {
+      setIsLoadingSlots(true)
+      const dateString = format(selectedDate, "yyyy-MM-dd")
+
+      getBookedSlots(dateString)
+        .then((slots) => {
+          setBookedSlots(slots)
+        })
+        .catch((error) => {
+          console.error("[v0] Error loading booked slots:", error)
+          toast({
+            title: "Erreur",
+            description: "Impossible de charger les créneaux disponibles.",
+            variant: "destructive",
+          })
+        })
+        .finally(() => {
+          setIsLoadingSlots(false)
+        })
+    }
+  }, [selectedDate, toast])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -64,29 +89,25 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
     setIsSubmitting(true)
 
     try {
-      const result = await sendVerificationEmail({
-        ...formData,
-        appointmentDate: format(selectedDate, "dd/MM/yyyy", { locale: fr }),
+      await createAppointment({
+        appointmentDate: format(selectedDate, "yyyy-MM-dd"),
         appointmentTime: selectedTime,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        dateOfBirth: formData.dateOfBirth,
+        email: formData.email,
+        phone: formData.phone,
       })
 
-      if (result.success) {
-        setIsSuccess(true)
-        toast({
-          title: "Email envoyé !",
-          description: "Veuillez vérifier votre boîte mail pour confirmer votre rendez-vous.",
-        })
-      } else {
-        toast({
-          title: "Erreur",
-          description: result.error || "Une erreur est survenue. Veuillez réessayer.",
-          variant: "destructive",
-        })
-      }
+      setIsSuccess(true)
+      toast({
+        title: "Email envoyé !",
+        description: "Veuillez vérifier votre boîte mail pour confirmer votre rendez-vous.",
+      })
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue. Veuillez réessayer.",
+        description: error instanceof Error ? error.message : "Une erreur est survenue. Veuillez réessayer.",
         variant: "destructive",
       })
     } finally {
@@ -162,19 +183,36 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
 
                 {selectedDate && (
                   <div>
-                    <Label className="text-base mb-3 block">Choisissez un horaire</Label>
+                    <Label className="text-base mb-3 block">
+                      Choisissez un horaire
+                      {isLoadingSlots && <span className="text-sm text-muted-foreground ml-2">(Chargement...)</span>}
+                    </Label>
                     <div className="grid grid-cols-3 gap-2">
-                      {TIME_SLOTS.map((time) => (
-                        <Button
-                          key={time}
-                          variant={selectedTime === time ? "default" : "outline"}
-                          onClick={() => setSelectedTime(time)}
-                          className="w-full"
-                        >
-                          {time}
-                        </Button>
-                      ))}
+                      {TIME_SLOTS.map((time) => {
+                        const isBooked = bookedSlots.includes(time)
+                        return (
+                          <Button
+                            key={time}
+                            variant={selectedTime === time ? "default" : "outline"}
+                            onClick={() => setSelectedTime(time)}
+                            disabled={isBooked || isLoadingSlots}
+                            className="w-full relative"
+                          >
+                            {time}
+                            {isBooked && (
+                              <span className="absolute inset-0 flex items-center justify-center bg-muted/80 rounded-md text-xs text-muted-foreground">
+                                Réservé
+                              </span>
+                            )}
+                          </Button>
+                        )
+                      })}
                     </div>
+                    {bookedSlots.length === TIME_SLOTS.length && !isLoadingSlots && (
+                      <p className="text-sm text-muted-foreground text-center mt-4">
+                        Tous les créneaux sont réservés pour cette date. Veuillez choisir une autre date.
+                      </p>
+                    )}
                   </div>
                 )}
 

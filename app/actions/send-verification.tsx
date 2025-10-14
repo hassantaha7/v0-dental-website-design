@@ -19,7 +19,7 @@ export async function sendVerificationEmail(data: BookingData) {
     // Generate a verification token (in production, store this in a database)
     const verificationToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 
-    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/verify?token=${verificationToken}`
+    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/verify-appointment?token=${verificationToken}`
 
     // In production, you would store the booking data with the token in a database
     console.log("[v0] Booking data:", data)

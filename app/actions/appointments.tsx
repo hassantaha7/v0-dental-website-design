@@ -127,6 +127,37 @@ export async function verifyAppointment(token: string) {
   try {
     const supabase = await createClient()
 
+    // First, check if the appointment exists with this token
+    const { data: existingAppointment, error: fetchError } = await supabase
+      .from("appointments")
+      .select("*")
+      .eq("verification_token", token)
+      .single()
+
+    if (fetchError || !existingAppointment) {
+      console.error("[v0] Appointment not found for token:", token)
+      return {
+        success: false,
+        error: "Token de vérification invalide. Veuillez vérifier le lien dans votre email.",
+      }
+    }
+
+    // Check if already verified
+    if (existingAppointment.is_verified) {
+      console.log("[v0] Appointment already verified:", existingAppointment.id)
+      return {
+        success: true,
+        appointment: {
+          date: existingAppointment.appointment_date,
+          time: existingAppointment.appointment_time,
+          firstName: existingAppointment.first_name,
+          lastName: existingAppointment.last_name,
+        },
+        alreadyVerified: true,
+      }
+    }
+
+    // Update to verified
     const { data, error } = await supabase
       .from("appointments")
       .update({ is_verified: true })
@@ -136,13 +167,14 @@ export async function verifyAppointment(token: string) {
       .single()
 
     if (error || !data) {
-      console.error("[v0] Error verifying appointment:", error)
+      console.error("[v0] Error updating appointment:", error)
       return {
         success: false,
-        error: "Token invalide ou rendez-vous déjà confirmé.",
+        error: "Une erreur est survenue lors de la confirmation. Veuillez réessayer.",
       }
     }
 
+    console.log("[v0] Appointment verified successfully:", data.id)
     return {
       success: true,
       appointment: {
@@ -151,6 +183,7 @@ export async function verifyAppointment(token: string) {
         firstName: data.first_name,
         lastName: data.last_name,
       },
+      alreadyVerified: false,
     }
   } catch (error) {
     console.error("[v0] Error in verifyAppointment:", error)

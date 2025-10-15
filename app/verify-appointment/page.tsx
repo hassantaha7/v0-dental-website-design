@@ -6,6 +6,8 @@ import Link from "next/link"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 
+export const dynamic = "force-dynamic"
+
 export default async function VerifyAppointmentPage({
   searchParams,
 }: {
@@ -16,7 +18,7 @@ export default async function VerifyAppointmentPage({
 
   if (!token) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-6">
+      <div className="flex min-h-screen items-center justify-center p-6 bg-background">
         <Card className="w-full max-w-md">
           <CardHeader>
             <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
@@ -41,7 +43,7 @@ export default async function VerifyAppointmentPage({
 
   if (!result.success) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-6">
+      <div className="flex min-h-screen items-center justify-center p-6 bg-background">
         <Card className="w-full max-w-md">
           <CardHeader>
             <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
@@ -63,7 +65,7 @@ export default async function VerifyAppointmentPage({
   const { appointment } = result
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-6">
+    <div className="flex min-h-screen items-center justify-center p-6 bg-background">
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
@@ -78,7 +80,10 @@ export default async function VerifyAppointmentPage({
               <strong>Patient :</strong> {appointment.firstName} {appointment.lastName}
             </p>
             <p className="text-sm">
-              <strong>Date :</strong> {format(new Date(appointment.date), "EEEE d MMMM yyyy", { locale: fr })}
+              <strong>Date :</strong>{" "}
+              {format(new Date(appointment.date), "EEEE d MMMM yyyy", {
+                locale: fr,
+              })}
             </p>
             <p className="text-sm">
               <strong>Heure :</strong> {appointment.time}

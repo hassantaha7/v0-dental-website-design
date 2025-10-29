@@ -41,7 +41,7 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
   const [selectedTime, setSelectedTime] = useState<string>()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
-  const [bookedSlots, setBookedSlots] = useState<string[]>([])
+  const [availableSlots, setAvailableSlots] = useState<string[]>([])
   const [isLoadingSlots, setIsLoadingSlots] = useState(false)
   const { toast } = useToast()
 
@@ -60,7 +60,7 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
 
       getBookedSlots(dateString)
         .then((slots) => {
-          setBookedSlots(slots)
+          setAvailableSlots(slots)
         })
         .catch((error) => {
           console.error("[v0] Error loading booked slots:", error)
@@ -189,17 +189,17 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                     </Label>
                     <div className="grid grid-cols-3 gap-2">
                       {TIME_SLOTS.map((time) => {
-                        const isBooked = bookedSlots.includes(time)
+                        const isAvailable = availableSlots.includes(time)
                         return (
                           <Button
                             key={time}
                             variant={selectedTime === time ? "default" : "outline"}
                             onClick={() => setSelectedTime(time)}
-                            disabled={isBooked || isLoadingSlots}
+                            disabled={!isAvailable || isLoadingSlots}
                             className="w-full relative"
                           >
                             {time}
-                            {isBooked && (
+                            {!isAvailable && (
                               <span className="absolute inset-0 flex items-center justify-center bg-muted/80 rounded-md text-xs text-muted-foreground">
                                 Réservé
                               </span>
@@ -208,11 +208,12 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                         )
                       })}
                     </div>
-                    {bookedSlots.length === TIME_SLOTS.length && !isLoadingSlots && (
+                    {availableSlots.length === 0 && !isLoadingSlots && (
                       <p className="text-sm text-muted-foreground text-center mt-4">
                         Tous les créneaux sont réservés pour cette date. Veuillez choisir une autre date.
                       </p>
                     )}
+
                   </div>
                 )}
 

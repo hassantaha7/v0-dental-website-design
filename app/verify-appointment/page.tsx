@@ -6,6 +6,8 @@ import Link from "next/link"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 
+export const dynamic = "force-dynamic"
+
 export default async function VerifyAppointmentPage({
   searchParams,
 }: {
@@ -16,7 +18,7 @@ export default async function VerifyAppointmentPage({
 
   if (!token) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-6">
+      <div className="flex min-h-screen items-center justify-center p-6 bg-background">
         <Card className="w-full max-w-md">
           <CardHeader>
             <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
@@ -41,7 +43,7 @@ export default async function VerifyAppointmentPage({
 
   if (!result.success) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-6">
+      <div className="flex min-h-screen items-center justify-center p-6 bg-background">
         <Card className="w-full max-w-md">
           <CardHeader>
             <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
@@ -60,25 +62,34 @@ export default async function VerifyAppointmentPage({
     )
   }
 
-  const { appointment } = result
+  const { appointment, alreadyVerified } = result
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-6">
+    <div className="flex min-h-screen items-center justify-center p-6 bg-background">
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
             <Check className="w-8 h-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl text-center">Rendez-vous confirmé !</CardTitle>
+          <CardTitle className="text-2xl text-center">
+            {alreadyVerified ? "Rendez-vous déjà confirmé" : "Rendez-vous confirmé !"}
+          </CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-4">
-          <p className="text-muted-foreground">Votre rendez-vous a été confirmé avec succès.</p>
+          <p className="text-muted-foreground">
+            {alreadyVerified
+              ? "Ce rendez-vous a déjà été confirmé précédemment."
+              : "Votre rendez-vous a été confirmé avec succès."}
+          </p>
           <div className="bg-muted/50 p-4 rounded-lg text-left">
             <p className="text-sm">
               <strong>Patient :</strong> {appointment.firstName} {appointment.lastName}
             </p>
             <p className="text-sm">
-              <strong>Date :</strong> {format(new Date(appointment.date), "EEEE d MMMM yyyy", { locale: fr })}
+              <strong>Date :</strong>{" "}
+              {format(new Date(appointment.date), "EEEE d MMMM yyyy", {
+                locale: fr,
+              })}
             </p>
             <p className="text-sm">
               <strong>Heure :</strong> {appointment.time}

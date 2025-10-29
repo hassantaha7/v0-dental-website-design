@@ -43,7 +43,6 @@ export function TestimonialsSection() {
           <h2 className="text-4xl lg:text-5xl font-bold text-balance">
             Ce que disent nos <span className="text-primary">clients</span>?
           </h2>
-          <p className="text-muted-foreground">Sous titre a réfléchir</p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">

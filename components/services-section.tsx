@@ -5,11 +5,11 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { ArrowRight } from "lucide-react"
 import { BookingDialog } from "@/components/booking-dialog"
 import { useState } from "react"
-
 const services = [
   {
     title: "Devis Invisalign",
-    description: "Description de la prestation en 3 lignes Description de la prestation en 3 lignes",
+    description:
+      "Simulation 3D personnalisée de votre futur sourire et devis complet du traitement Invisalign.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8">
         <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" />
@@ -19,7 +19,8 @@ const services = [
   },
   {
     title: "Fauteuil Classique",
-    description: "Description de la prestation en 3 lignes Description de la prestation en 3 lignes",
+    description:
+      "Blanchiment professionnel au fauteuil avec gel à 30 % activé par lampe pour un résultat immédiat.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8">
         <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" />
@@ -28,28 +29,9 @@ const services = [
     ),
   },
   {
-    title: "2nd Fauteuil Classique",
-    description: "Description de la prestation en 3 lignes Description de la prestation en 3 lignes",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8">
-        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" />
-        <path d="M12 6v12M6 12h12" />
-      </svg>
-    ),
-  },
-  {
-    title: "Fauteuil Boost 40 %",
-    description: "Description de la prestation en 3 lignes Description de la prestation en 3 lignes",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8">
-        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" />
-        <path d="M8 12l2 2 4-4" />
-      </svg>
-    ),
-  },
-  {
-    title: "2nd Fauteuil Bosst",
-    description: "Description de la prestation en 3 lignes Description de la prestation en 3 lignes",
+    title: "2nd Fauteuil Boost 40 %",
+    description:
+      "Blanchiment intensif au fauteuil en une séance avec gel à 40 % pour un éclat visible dès la fin.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8">
         <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" />
@@ -59,7 +41,8 @@ const services = [
   },
   {
     title: "Gouttières Blanchiment",
-    description: "Description de la prestation en 3 lignes Description de la prestation en 3 lignes",
+    description:
+      "Blanchiment progressif à domicile avec gouttières sur mesure fabriquées après scan intra-oral.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8">
         <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" />
@@ -87,7 +70,6 @@ export function ServicesSection() {
             <h2 className="text-4xl lg:text-5xl font-bold text-balance">
               Des services de <span className="text-primary">haute qualité</span> pour vous.
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">Sous titre réfléchir</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">

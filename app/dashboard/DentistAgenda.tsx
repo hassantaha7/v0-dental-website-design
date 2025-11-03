@@ -27,6 +27,23 @@ function LogoutButton() {
   )
 }
 
+// ✅ Nouveau bouton pour ajouter une indisponibilité
+function AddUnavailabilityButton() {
+  const router = useRouter()
+
+  const handleNavigate = () => {
+    router.push("/dashboard/unavailability")
+  }
+
+  return (
+    <button
+      onClick={handleNavigate}
+      className="text-sm text-white bg-[#1B9FBD] hover:bg-[#13839C] rounded-md px-3 py-1 transition"
+    >
+      + Ajouter indisponibilité
+    </button>
+  )
+}
 export default function DentistAgenda() {
   const [appointments, setAppointments] = useState<any[]>([])
   const [unavailability, setUnavailability] = useState<any[]>([])
@@ -76,7 +93,7 @@ export default function DentistAgenda() {
   // --- Combine appointments + unavailability ---
   const events = [
     ...appointments.map((a) => ({
-      title: `${a.first_name} ${a.last_name}`,
+      title: `${a.first_name} ${a.last_name} (${a.appointment_type === 'blanchiment' ? 'Blanchiment' : 'Devis'})`,
       start: `${a.appointment_date}T${a.appointment_time}`,
       color: a.is_verified ? "#1B9FBD" : "#ccc",
     })),
@@ -95,8 +112,11 @@ export default function DentistAgenda() {
           Agenda du Cabinet
         </h2>
 
-        {/* ✅ Use the LogoutButton here */}
-        <LogoutButton />
+         {/* ✅ Groupe de boutons */}
+         <div className="flex gap-2">
+          <AddUnavailabilityButton />
+          <LogoutButton />
+        </div>
       </div>
 
       <FullCalendar

@@ -42,38 +42,57 @@ export async function getBookedSlots(date: string) {
   try {
     const supabase = await createClient()
 
-    // --- 1️⃣ Fetch verified booked slots ---
+    // --- 1️⃣ Fetch verified booked slots with type ---
     const { data: booked = [], error: bookedError } = await supabase
       .from("appointments")
-      .select("appointment_time")
+      .select("appointment_time, appointment_type")
       .eq("appointment_date", date)
       .eq("is_verified", true)
 
     if (bookedError) console.error("[v0] Error fetching booked slots:", bookedError)
 
-    // --- 2️⃣ Fetch unavailable periods ---
+    // --- 2️⃣ Fetch dentist unavailability ---
     const { data: unavailability = [], error: unavailabilityError } = await supabase
       .from("dentist_unavailability")
       .select("*")
 
-    if (unavailabilityError) {
+    if (unavailabilityError)
       console.warn("[v0] No unavailability found or access denied:", unavailabilityError.message)
-    }
 
-    // --- 3️⃣ Generate all slots ---
+    // --- 3️⃣ Generate all possible slots (every 30 min) ---
     const allSlots = generateTimeSlots("09:00", "18:00", 30)
 
-    // --- 4️⃣ Filter out booked + unavailable ---
+    // --- 4️⃣ Block busy slots (including 1h for blanchiment) ---
     const availableSlots = allSlots.filter((slot) => {
       const slotTime = new Date(`${date}T${slot}`)
 
-      const isBooked = booked.some((b) => b.appointment_time === slot)
+      const isBooked = booked.some((b) => {
+        const bookedTime = b.appointment_time
+        const bookedType = b.appointment_type || "devis"
 
-      const isUnavailable = Array.isArray(unavailability) && unavailability.some((u) => {
-        const start = new Date(u.start_time)
-        const end = new Date(u.end_time)
-        return slotTime >= start && slotTime <= end
+        // If the booked appointment is a blanchiment (1h),
+        // block both the starting slot and the next 30 min slot
+        if (bookedType === "blanchiment") {
+          const [h, m] = bookedTime.split(":").map(Number)
+          const nextTime = new Date(`${date}T${bookedTime}`)
+          nextTime.setMinutes(nextTime.getMinutes() + 30)
+          const nextSlot = `${String(nextTime.getHours()).padStart(2, "0")}:${String(
+            nextTime.getMinutes()
+          ).padStart(2, "0")}`
+          return slot === bookedTime || slot === nextSlot
+        }
+
+        // For a devis (30 min), block only that slot
+        return slot === bookedTime
       })
+
+      const isUnavailable =
+        Array.isArray(unavailability) &&
+        unavailability.some((u) => {
+          const start = new Date(u.start_time)
+          const end = new Date(u.end_time)
+          return slotTime >= start && slotTime < end
+        })
 
       return !isBooked && !isUnavailable
     })
@@ -82,9 +101,10 @@ export async function getBookedSlots(date: string) {
     return availableSlots
   } catch (error) {
     console.error("[v0] Fatal error in getBookedSlots:", error)
-    return generateTimeSlots("09:00", "18:00", 30) // fallback: all available
+    return generateTimeSlots("09:00", "18:00", 30) // fallback
   }
 }
+
 
 
 
@@ -115,6 +135,7 @@ export async function createAppointment(appointmentData: AppointmentData) {
       .insert({
         appointment_date: appointmentData.appointmentDate,
         appointment_time: appointmentData.appointmentTime,
+        appointment_type: appointmentData.appointmentType,
         first_name: appointmentData.firstName,
         last_name: appointmentData.lastName,
         date_of_birth: appointmentData.dateOfBirth,

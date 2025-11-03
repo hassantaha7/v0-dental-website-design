@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -19,22 +18,6 @@ interface BookingDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-const TIME_SLOTS = [
-  "09:00",
-  "09:30",
-  "10:00",
-  "10:30",
-  "11:00",
-  "11:30",
-  "14:00",
-  "14:30",
-  "15:00",
-  "15:30",
-  "16:00",
-  "16:30",
-  "17:00",
-]
-
 export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
   const [step, setStep] = useState(1)
   const [selectedDate, setSelectedDate] = useState<Date>()
@@ -43,6 +26,8 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
   const [isSuccess, setIsSuccess] = useState(false)
   const [availableSlots, setAvailableSlots] = useState<string[]>([])
   const [isLoadingSlots, setIsLoadingSlots] = useState(false)
+  const [appointmentType, setAppointmentType] = useState<"devis" | "blanchiment">("devis")
+
   const { toast } = useToast()
 
   const [formData, setFormData] = useState({
@@ -53,6 +38,7 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
     phone: "",
   })
 
+  // --- Update slots dynamically when date or type changes ---
   useEffect(() => {
     if (selectedDate) {
       setIsLoadingSlots(true)
@@ -60,7 +46,15 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
 
       getBookedSlots(dateString)
         .then((slots) => {
-          setAvailableSlots(slots)
+          // ⏱️ Adjust slots duration depending on appointment type
+          if (appointmentType === "blanchiment") {
+            // Keep only even hours (09:00, 10:00, 11:00, etc.)
+            const oneHourSlots = slots.filter((time) => time.endsWith(":00"))
+            setAvailableSlots(oneHourSlots)
+          } else {
+            // Keep all 30-min slots
+            setAvailableSlots(slots)
+          }
         })
         .catch((error) => {
           console.error("[v0] Error loading booked slots:", error)
@@ -74,7 +68,7 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
           setIsLoadingSlots(false)
         })
     }
-  }, [selectedDate, toast])
+  }, [selectedDate, appointmentType, toast])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -85,12 +79,12 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
 
   const handleSubmit = async () => {
     if (!selectedDate || !selectedTime) return
-
     setIsSubmitting(true)
 
     try {
       await createAppointment({
         appointmentDate: format(selectedDate, "yyyy-MM-dd"),
+        appointmentType,
         appointmentTime: selectedTime,
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -169,6 +163,19 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
 
             {step === 1 && (
               <div className="space-y-6 py-4">
+                {/* --- Select type of appointment --- */}
+                <div className="mb-4">
+                  <Label className="text-base mb-2 block">Type de rendez-vous</Label>
+                  <select
+                    className="border rounded-md p-2 w-full"
+                    value={appointmentType}
+                    onChange={(e) => setAppointmentType(e.target.value as "devis" | "blanchiment")}
+                  >
+                    <option value="devis">🦷 Devis (30 min)</option>
+                    <option value="blanchiment">✨ Blanchiment dentaire (1h)</option>
+                  </select>
+                </div>
+
                 <div>
                   <Label className="text-base mb-3 block">Sélectionnez une date</Label>
                   <Calendar
@@ -188,32 +195,23 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
                       {isLoadingSlots && <span className="text-sm text-muted-foreground ml-2">(Chargement...)</span>}
                     </Label>
                     <div className="grid grid-cols-3 gap-2">
-                      {TIME_SLOTS.map((time) => {
-                        const isAvailable = availableSlots.includes(time)
-                        return (
-                          <Button
-                            key={time}
-                            variant={selectedTime === time ? "default" : "outline"}
-                            onClick={() => setSelectedTime(time)}
-                            disabled={!isAvailable || isLoadingSlots}
-                            className="w-full relative"
-                          >
-                            {time}
-                            {!isAvailable && (
-                              <span className="absolute inset-0 flex items-center justify-center bg-muted/80 rounded-md text-xs text-muted-foreground">
-                                Réservé
-                              </span>
-                            )}
-                          </Button>
-                        )
-                      })}
+                      {availableSlots.map((time) => (
+                        <Button
+                          key={time}
+                          variant={selectedTime === time ? "default" : "outline"}
+                          onClick={() => setSelectedTime(time)}
+                          className="w-full"
+                        >
+                          {time}
+                        </Button>
+                      ))}
                     </div>
+
                     {availableSlots.length === 0 && !isLoadingSlots && (
                       <p className="text-sm text-muted-foreground text-center mt-4">
-                        Tous les créneaux sont réservés pour cette date. Veuillez choisir une autre date.
+                        Aucun créneau disponible pour cette date.
                       </p>
                     )}
-
                   </div>
                 )}
 
@@ -228,28 +226,15 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
 
             {step === 2 && (
               <div className="space-y-4 py-4">
+                {/* Infos patient */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">Prénom *</Label>
-                    <Input
-                      id="firstName"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      placeholder="Jean"
-                      required
-                    />
+                    <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleInputChange} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Nom *</Label>
-                    <Input
-                      id="lastName"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      placeholder="Dupont"
-                      required
-                    />
+                    <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleInputChange} />
                   </div>
                 </div>
 
@@ -267,33 +252,19 @@ export function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
 
                 <div className="space-y-2">
                   <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="jean.dupont@example.com"
-                    required
-                  />
+                  <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="phone">Téléphone *</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="06 12 34 56 78"
-                    required
-                  />
+                  <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleInputChange} />
                 </div>
 
                 <div className="bg-muted/50 p-4 rounded-lg">
                   <p className="text-sm text-muted-foreground">
                     <strong>Récapitulatif :</strong>
+                    <br />
+                    Type : {appointmentType === "blanchiment" ? "Blanchiment (1h)" : "Devis (30 min)"}
                     <br />
                     Date : {selectedDate && format(selectedDate, "EEEE d MMMM yyyy", { locale: fr })}
                     <br />

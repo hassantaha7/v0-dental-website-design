@@ -285,6 +285,39 @@ export async function verifyAppointment(token: string) {
     }
 
     console.log("[v0] Appointment verified successfully:", data.id)
+
+    // --- Notify dentist ONLY on successful verification ---
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const { Resend } = await import("resend")
+        const resend = new Resend(process.env.RESEND_API_KEY)
+
+        await resend.emails.send({
+          from: "Rendez-vous <dr-ouss@htaha.fr>",
+          to: "hassantaha3210@gmail.com",
+          subject: "Nouveau rendez-vous",
+          html: `
+            <div style="font-family:Arial,sans-serif">
+              <p>Bonjour ${process.env.DENTIST_NAME || "Docteur"},</p>
+              <p><strong>${data.firstName} ${data.lastName}</strong> vient de réserver un rendez-vous.</p>
+              <ul>
+                <li><strong>Patient :</strong> ${data.first_name} ${data.last_name}</li>
+                <li><strong>Type :</strong> ${data.appointment_type === "blanchiment" ? "Blanchiment (1h)" : "Devis (30 min)"}</li>
+                <li><strong>Date :</strong> ${new Date(data.appointment_date).toLocaleDateString("fr-FR", { weekday:"long", year:"numeric", month:"long", day:"numeric" })}</li>
+                <li><strong>Heure :</strong> ${data.appointment_time}</li>
+                <li><strong>Email :</strong> ${data.email}</li>
+                <li><strong>Téléphone :</strong> ${data.phone}</li>
+              </ul>
+            </div>
+          `,
+        })
+      } catch (e) {
+        console.error("[v0] Error notifying dentist (confirmed):", e)
+      }
+    } else {
+      console.log("[v0] Dentist notification skipped: RESEND_API_KEY or DENTIST_EMAIL missing.")
+    }
+
     return {
       success: true,
       appointment: {
@@ -295,6 +328,11 @@ export async function verifyAppointment(token: string) {
       },
       alreadyVerified: false,
     }
+
+
+
+
+    
   } catch (error) {
     console.error("[v0] Error in verifyAppointment:", error)
     return {

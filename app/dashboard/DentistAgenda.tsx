@@ -93,9 +93,13 @@ export default function DentistAgenda() {
   // --- Combine appointments + unavailability ---
   const events = [
     ...appointments.map((a) => ({
-      title: `${a.first_name} ${a.last_name} (${a.appointment_type === 'blanchiment' ? 'Blanchiment' : 'Devis'})`,
+      title: `${a.first_name} ${a.last_name} (${a.appointment_type === "blanchiment" ? "Blanchiment" : "Devis"})`,
       start: `${a.appointment_date}T${a.appointment_time}`,
       color: a.is_verified ? "#1B9FBD" : "#ccc",
+      email: a.email,
+      phone: a.phone,
+      appointment_type: a.appointment_type,
+      created_at: a.created_at,
     })),
     ...unavailability.map((u) => ({
       title: u.reason || "Indisponible",
@@ -104,7 +108,7 @@ export default function DentistAgenda() {
       color: "#f87171",
     })),
   ]
-
+  
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
@@ -133,11 +137,29 @@ export default function DentistAgenda() {
           center: "title",
           right: "dayGridMonth,timeGridWeek,timeGridDay",
         }}
-        eventClick={(info) =>
-          alert(
-            `Événement : ${info.event.title}\nHeure : ${info.event.start?.toLocaleString()}`
-          )
-        }
+        eventClick={(info) => {
+          const event = info.event.extendedProps
+          const title = info.event.title
+          const start = info.event.start?.toLocaleString("fr-FR", {
+            dateStyle: "full",
+            timeStyle: "short",
+          })
+        
+          const details = `
+        📅 Date et heure : ${start}
+        👤 Patient : ${title}
+        📧 Email : ${event.email || "Non renseigné"}
+        📞 Téléphone : ${event.phone || "Non renseigné"}
+        🦷 Type : ${event.appointment_type === "blanchiment" ? "Blanchiment dentaire (1h)" : "Devis (30 min)"}
+        📅 Créé le : ${new Date(event.created_at).toLocaleString("fr-FR", {
+          dateStyle: "full",
+          timeStyle: "short",
+        })}
+          `
+        
+          alert(details)
+        }}
+        
       />
     </div>
   )

@@ -15,18 +15,12 @@ export function Header() {
         <div className="container mx-auto px-4 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="w-7 h-7 text-primary-foreground"
-                >
-                  <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" />
-                  <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-                  <path d="M9 9h.01M15 9h.01" />
-                </svg>
+              <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-white shadow-md">
+                <img
+                  src="/logo.png"
+                  alt="Dr. Ouss Logo"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <span className="text-xl font-bold text-primary">DR.OUSS</span>
             </Link>

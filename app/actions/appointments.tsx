@@ -293,13 +293,13 @@ export async function verifyAppointment(token: string) {
         const resend = new Resend(process.env.RESEND_API_KEY)
 
         await resend.emails.send({
-          from: "Rendez-vous <dr-ouss@htaha.fr>",
-          to: "hassantaha3210@gmail.com",
+          from: "Rendez-vous Cabinet Dentaire Dr.Ouss <dr-ouss@htaha.fr>",
+          to: "oussakri.reda@hotmail.com",
           subject: "Nouveau rendez-vous",
           html: `
             <div style="font-family:Arial,sans-serif">
-              <p>Bonjour ${process.env.DENTIST_NAME || "Docteur"},</p>
-              <p><strong>${data.firstName} ${data.lastName}</strong> vient de réserver un rendez-vous.</p>
+              <p>Bonjour,</p>
+              <p><strong>${data.first_name} ${data.last_ame}</strong> vient de réserver un rendez-vous.</p>
               <ul>
                 <li><strong>Patient :</strong> ${data.first_name} ${data.last_name}</li>
                 <li><strong>Type :</strong> ${data.appointment_type === "blanchiment" ? "Blanchiment (1h)" : "Devis (30 min)"}</li>

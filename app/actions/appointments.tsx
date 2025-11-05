@@ -36,42 +36,45 @@ function generateTimeSlots(start: string, end: string, intervalMinutes: number) 
 }
 
 
-
-
 export async function getBookedSlots(date: string) {
   try {
     const supabase = await createClient()
 
-    // --- 1️⃣ Fetch verified booked slots with type ---
+    // Fetch all appointments (verified OR recent unverified)
     const { data: booked = [], error: bookedError } = await supabase
       .from("appointments")
-      .select("appointment_time, appointment_type")
+      .select("appointment_time, appointment_type, is_verified, created_at")
       .eq("appointment_date", date)
-      .eq("is_verified", true)
 
     if (bookedError) console.error("[v0] Error fetching booked slots:", bookedError)
 
-    // --- 2️⃣ Fetch dentist unavailability ---
-    const { data: unavailability = [], error: unavailabilityError } = await supabase
+    const now = new Date()
+
+    // Keep slots that are verified OR still 'locked' (<30min old)
+    const activeBookings = booked.filter((b) => {
+      if (b.is_verified) return true
+      const createdAt = new Date(b.created_at)
+      const diffMinutes = (now.getTime() - createdAt.getTime()) / (1000 * 60)
+      return diffMinutes < 30 // still locked
+    })
+
+    // Fetch dentist unavailability
+    const { data: unavailability = [] } = await supabase
       .from("dentist_unavailability")
       .select("*")
 
-    if (unavailabilityError)
-      console.warn("[v0] No unavailability found or access denied:", unavailabilityError.message)
-
-    // --- 3️⃣ Generate all possible slots (every 30 min) ---
+    // Generate all slots
     const allSlots = generateTimeSlots("09:00", "18:00", 30)
 
-    // --- 4️⃣ Block busy slots (including 1h for blanchiment) ---
+    // Filter out booked or unavailable
     const availableSlots = allSlots.filter((slot) => {
       const slotTime = new Date(`${date}T${slot}`)
 
-      const isBooked = booked.some((b) => {
+      const isBooked = activeBookings.some((b) => {
         const bookedTime = b.appointment_time
         const bookedType = b.appointment_type || "devis"
 
-        // If the booked appointment is a blanchiment (1h),
-        // block both the starting slot and the next 30 min slot
+        // If blanchiment, block 1h
         if (bookedType === "blanchiment") {
           const [h, m] = bookedTime.split(":").map(Number)
           const nextTime = new Date(`${date}T${bookedTime}`)
@@ -82,7 +85,7 @@ export async function getBookedSlots(date: string) {
           return slot === bookedTime || slot === nextSlot
         }
 
-        // For a devis (30 min), block only that slot
+        // For devis, block 30min
         return slot === bookedTime
       })
 
@@ -101,7 +104,7 @@ export async function getBookedSlots(date: string) {
     return availableSlots
   } catch (error) {
     console.error("[v0] Fatal error in getBookedSlots:", error)
-    return generateTimeSlots("09:00", "18:00", 30) // fallback
+    return generateTimeSlots("09:00", "18:00", 30)
   }
 }
 
@@ -125,6 +128,24 @@ export async function createAppointment(appointmentData: AppointmentData) {
 
     if (conflicts && conflicts.length > 0) {
     throw new Error("Le praticien n’est pas disponible à cet horaire. Veuillez choisir un autre créneau.")
+    }
+
+
+    
+    // ✅ 3️⃣ Check if this email already has a future appointment
+    const { data: existingAppointments, error: existingError } = await supabase
+      .from("appointments")
+      .select("appointment_date, is_verified")
+      .eq("email", appointmentData.email)
+      .gt("appointment_date", new Date().toISOString().split("T")[0]) // future
+      .limit(1)
+
+    if (existingError) {
+      console.error("[v0] Error checking existing appointments:", existingError)
+    }
+
+    if (existingAppointments && existingAppointments.length > 0) {
+      throw new Error("Vous avez déjà un rendez-vous à venir. Merci d’attendre avant d’en réserver un autre.")
     }
 
 

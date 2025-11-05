@@ -160,7 +160,7 @@ export async function createAppointment(appointmentData: AppointmentData) {
         const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-appointment?token=${verificationToken}`
 
         await resend.emails.send({
-          from: "Dr.Ouss Cabinet Dentaire <onboarding@resend.dev>",
+          from: "Dr.Ouss Cabinet Dentaire <dr-ouss@htaha.fr>",
           to: appointmentData.email,
           subject: "Confirmez votre rendez-vous - Dr.Ouss",
           html: `

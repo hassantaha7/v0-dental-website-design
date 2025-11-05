@@ -26,7 +26,7 @@ export async function sendVerificationEmail(data: BookingData) {
     console.log("[v0] Verification token:", verificationToken)
 
     const { error } = await resend.emails.send({
-      from: "Dr.Ouss Cabinet Dentaire <onboarding@resend.dev>",
+      from: "Dr.Ouss Cabinet Dentaire <dr-ouss@htaha.fr>",
       to: data.email,
       subject: "Confirmez votre rendez-vous - Dr.Ouss",
       html: `

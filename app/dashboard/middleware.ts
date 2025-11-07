@@ -6,18 +6,27 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
   const supabase = createMiddlewareClient({ req, res })
 
+  // Check if a session cookie exists before making a network call
+  const hasAccessToken = req.cookies.has("sb-access-token")
+
+  // Quick redirect if obviously logged out
+  if (!hasAccessToken && req.nextUrl.pathname.startsWith("/dashboard")) {
+    const redirectUrl = req.nextUrl.clone()
+    redirectUrl.pathname = "/login"
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  // Only call getSession() when really necessary
   const {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // If not logged in and tries to access /dashboard
   if (!session && req.nextUrl.pathname.startsWith("/dashboard")) {
     const redirectUrl = req.nextUrl.clone()
     redirectUrl.pathname = "/login"
     return NextResponse.redirect(redirectUrl)
   }
 
-  // If logged in and tries to access /login, redirect to dashboard
   if (session && req.nextUrl.pathname === "/login") {
     const redirectUrl = req.nextUrl.clone()
     redirectUrl.pathname = "/dashboard"

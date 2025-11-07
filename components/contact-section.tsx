@@ -42,7 +42,7 @@ export function ContactSection() {
                   <Phone className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium">09 01 10 10 20</p>
+                  <p className="font-medium">07 59 51 61 87</p>
                 </div>
               </div>
 
@@ -51,7 +51,7 @@ export function ContactSection() {
                   <Mail className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium">Ouss@blanchiment.com</p>
+                  <p className="font-medium">oussakri.reda@hotmail.fr</p>
                 </div>
               </div>
 
@@ -60,7 +60,7 @@ export function ContactSection() {
                   <Instagram className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium">Snap/ insta</p>
+                  <p className="font-medium">Snap: sami78190 / akagami_75</p>
                 </div>
               </div>
             </div>

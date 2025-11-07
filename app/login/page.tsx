@@ -27,6 +27,7 @@ export default function LoginPage() {
     if (error) {
       console.log("Login error:", error)
       setError("Identifiants incorrects")
+      setLoading(false)
       return
     }
   

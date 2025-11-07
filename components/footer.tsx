@@ -59,12 +59,12 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <a href="#" className="text-sm text-white/80 hover:text-white transition-colors">
-                  Snapchat
+                  Snapchat sami78190 / akagami_75
                 </a>
               </li>
               <li>
                 <a href="#" className="text-sm text-white/80 hover:text-white transition-colors">
-                  Instagram
+                  Instagram: dr.ouss
                 </a>
               </li>
               <li>
@@ -80,15 +80,15 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <a
-                  href="mailto:Ouss@blanchiment.com"
+                  href="mailto:oussakri.reda@hotmail.fr"
                   className="text-sm text-white/80 hover:text-white transition-colors"
                 >
-                  Ouss@blanchiment.com
+                  oussakri.reda@hotmail.fr
                 </a>
               </li>
               <li>
-                <a href="tel:0901101020" className="text-sm text-white/80 hover:text-white transition-colors">
-                  09 01 10 10 20
+                <a href="tel:+33759516187" className="text-sm text-white/80 hover:text-white transition-colors">
+                  07 59 51 61 87
                 </a>
               </li>
             </ul>
